@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-g" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Victoria Community Mural Movement</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        overflow-y: scroll; /* Always show scrollbar to prevent layout shift */
+      }
+      @import url('https://rsms.me/inter/inter.css');
+
+      /* Custom Scrollbar Styles */
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f0fdf4; /* Tailwind green-50 */
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #4ade80; /* Tailwind green-400 */
+        border-radius: 10px;
+        transition: background-color 0.2s;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #22c55e; /* Tailwind green-500 */
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
