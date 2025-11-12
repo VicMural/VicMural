@@ -14,14 +14,14 @@ const TEMPLATE_ID = 'template_xnq4n3r'; // Auth Template
 const PUBLIC_KEY = 'DISO7k-Ev9xWIMk0J';
 
 const initialParticipants: Participant[] = [
-  { id: -1, name: 'Project Victoria For Art', avatarUrl: '', statuses: ['Administrator', 'Developer'] },
-  { id: -2, name: 'Victoria Arts Council', avatarUrl: '', statuses: ['Collaborator'], link: 'https://artsvictoria.ca' },
-  { id: -3, name: 'Liam Smith', avatarUrl: '', statuses: ['Opted-in'] },
-  { id: -4, name: 'Olivia Johnson', avatarUrl: '', statuses: ['Opted-in'] },
-  { id: -5, name: 'Noah Williams', avatarUrl: '', statuses: ['Opted-in'] },
-  { id: -6, name: 'Emma Brown', avatarUrl: '', statuses: ['Opted-in'] },
-  { id: -7, name: 'Oliver Jones', avatarUrl: '', statuses: ['Opted-in'] },
-  { id: -8, name: 'Ava Garcia', avatarUrl: '', statuses: ['Opted-in'] },
+  { id: -1, name: 'Project Victoria For Art', avatarUrl: '', statuses: ['Administrator', 'Developer'], email: 'project.victoria.for.art@gmail.com' },
+  { id: -2, name: 'Victoria Arts Council', avatarUrl: '', statuses: ['Collaborator'], link: 'https://artsvictoria.ca', email: 'contact@artsvictoria.ca' },
+  { id: -3, name: 'Liam Smith', avatarUrl: '', statuses: ['Opted-in'], email: 'liam@example.com', password: 'password123', signupDate: '2023-10-26T10:00:00Z' },
+  { id: -4, name: 'Olivia Johnson', avatarUrl: '', statuses: ['Opted-in'], email: 'olivia@example.com', password: 'password123', signupDate: '2023-10-25T11:30:00Z' },
+  { id: -5, name: 'Noah Williams', avatarUrl: '', statuses: ['pending_review'], email: 'noah@example.com', password: 'password123', signupDate: '2023-10-27T14:00:00Z' },
+  { id: -6, name: 'Emma Brown', avatarUrl: '', statuses: ['Opted-in'], email: 'emma@example.com', password: 'password123', signupDate: '2023-10-24T09:00:00Z' },
+  { id: -7, name: 'Oliver Jones', avatarUrl: '', statuses: ['hidden'], email: 'oliver@example.com', password: 'password123', signupDate: '2023-10-23T16:45:00Z' },
+  { id: -8, name: 'Ava Garcia', avatarUrl: '', statuses: ['Opted-in'], email: 'ava@example.com', password: 'password123', signupDate: '2023-10-22T18:20:00Z' },
 ];
 
 // --- SVG ICON COMPONENTS ---
@@ -139,8 +139,13 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick, onLogoClic
 
 interface HeroProps {
   onSignUpClick: () => void;
+  isLoggedIn: boolean;
+  currentUser: Participant | null;
 }
-const Hero: React.FC<HeroProps> = ({ onSignUpClick }) => {
+const Hero: React.FC<HeroProps> = ({ onSignUpClick, isLoggedIn, currentUser }) => {
+  const showPendingMessage = isLoggedIn && currentUser?.statuses.includes('pending_review');
+  const showJoinButton = !isLoggedIn;
+
   return (
     <section className="relative h-screen flex items-center justify-center text-white">
       <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://picsum.photos/seed/muralart/1920/1080')" }}></div>
@@ -148,9 +153,18 @@ const Hero: React.FC<HeroProps> = ({ onSignUpClick }) => {
       <div className="relative z-10 text-center px-4">
         <h1 className="text-5xl md:text-7xl font-extrabold mb-4 leading-tight drop-shadow-lg">Paint Our City's Canvas</h1>
         <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8 text-gray-200 drop-shadow-md">Join the Victoria Community Mural Movement and leave your artistic mark on the streets we call home. Collaborate, create, and inspire.</p>
-        <button onClick={onSignUpClick} className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-4 px-8 rounded-full text-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-2xl">
-          Join the Movement
-        </button>
+        
+        {showPendingMessage && (
+          <div className="bg-white/20 backdrop-blur-sm text-white font-bold py-4 px-8 rounded-full text-lg shadow-2xl inline-block">
+            You're signed up! Hold tight while we review your application.
+          </div>
+        )}
+        
+        {showJoinButton && (
+          <button onClick={onSignUpClick} className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-4 px-8 rounded-full text-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-2xl">
+            Join the Movement
+          </button>
+        )}
       </div>
     </section>
   );
@@ -215,28 +229,33 @@ const CommunityVoice: React.FC = () => {
     );
 };
 
+const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
+  const styles: { [key: string]: string } = {
+    'Administrator': 'bg-red-100 text-red-800',
+    'Collaborator': 'bg-amber-100 text-amber-800',
+    'Opted-in': 'bg-green-100 text-green-800',
+    'Developer': 'bg-slate-100 text-slate-800',
+    'pending_review': 'bg-yellow-100 text-yellow-800',
+    'hidden': 'bg-gray-100 text-gray-800',
+  };
+  const defaultStyle = 'bg-gray-100 text-gray-800';
+  const style = styles[status] || defaultStyle;
+
+  return (
+    <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${style}`}>
+      {status.replace('_', ' ')}
+    </span>
+  );
+};
+
+
 interface ParticipantListProps {
     participants: Participant[];
 }
 const ParticipantList: React.FC<ParticipantListProps> = ({ participants }) => {
   const participantCap = 500;
-
-  const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-    const styles: { [key: string]: string } = {
-      'Administrator': 'bg-red-100 text-red-800',
-      'Collaborator': 'bg-amber-100 text-amber-800',
-      'Opted-in': 'bg-green-100 text-green-800',
-      'Developer': 'bg-slate-100 text-slate-800',
-    };
-    const defaultStyle = 'bg-gray-100 text-gray-800';
-    const style = styles[status] || defaultStyle;
-
-    return (
-      <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${style}`}>
-        {status}
-      </span>
-    );
-  };
+  const approvedStatuses = ['Administrator', 'Collaborator', 'Opted-in', 'Developer'];
+  const visibleParticipants = participants.filter(p => p.statuses.some(s => approvedStatuses.includes(s)));
 
   return (
     <section id="gallery" className="py-20 bg-gray-50">
@@ -244,12 +263,12 @@ const ParticipantList: React.FC<ParticipantListProps> = ({ participants }) => {
         <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-800">Our Community Members</h2>
             <p className="text-lg text-gray-600 mt-2 font-semibold">
-                <span className="text-green-600">{participants.length}</span> / {participantCap} Participants
+                <span className="text-green-600">{visibleParticipants.length}</span> / {participantCap} Participants
             </p>
         </div>
         <div className="max-w-3xl mx-auto bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
              <ul className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-              {participants.length > 0 ? participants.map(p => (
+              {visibleParticipants.length > 0 ? visibleParticipants.map(p => (
                 <li key={p.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
                   <span className="text-gray-800 font-medium truncate">{p.name}</span>
                   <div className="flex flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-3">
@@ -370,7 +389,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
         setError(null);
         const success = onSubmit(email, password);
         if (!success) {
-            setError('Invalid credentials. Please check your email and try again.');
+            setError('Invalid credentials. Please check your details and try again.');
         }
     }
 
@@ -409,17 +428,18 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
 };
 
 interface SignUpFormProps {
-    onSubmit: (name: string, email: string) => void;
+    onSubmit: (name: string, email: string, password: string) => void;
     isSubmitting: boolean;
 }
 
 const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, isSubmitting }) => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        onSubmit(name, email);
+        onSubmit(name, email, password);
     }
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
@@ -449,7 +469,15 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, isSubmitting }) => {
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700" htmlFor="signup-password">Password</label>
-        <input id="signup-password" type="password" required placeholder="••••••••" className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-500" />
+        <input 
+            id="signup-password" 
+            type="password" 
+            required 
+            placeholder="••••••••" 
+            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-500" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+        />
       </div>
       <button type="submit" disabled={isSubmitting} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-lg text-sm font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
         {isSubmitting ? 'Sending Code...' : 'Create Account & Join'}
@@ -509,7 +537,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ email, onSubmit, on
 };
 
 interface SignUpPageProps {
-    onInitiateSignUp: (name: string, email: string) => void;
+    onInitiateSignUp: (name: string, email: string, password: string) => void;
     onCompleteSignUp: (code: string) => void;
     onBackToDetails: () => void;
     signupStep: 'details' | 'verify';
@@ -559,11 +587,13 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ onInitiateSignUp, onCompleteSig
 interface HomePageProps {
   onSignUpClick: () => void;
   participants: Participant[];
+  isLoggedIn: boolean;
+  currentUser: Participant | null;
 }
-const HomePage: React.FC<HomePageProps> = ({ onSignUpClick, participants }) => {
+const HomePage: React.FC<HomePageProps> = ({ onSignUpClick, participants, isLoggedIn, currentUser }) => {
   return (
     <main>
-      <Hero onSignUpClick={onSignUpClick} />
+      <Hero onSignUpClick={onSignUpClick} isLoggedIn={isLoggedIn} currentUser={currentUser} />
       <ProjectDescription />
       <CommunityVoice />
       <ParticipantList participants={participants} />
@@ -572,7 +602,7 @@ const HomePage: React.FC<HomePageProps> = ({ onSignUpClick, participants }) => {
 };
 
 const CustomerServicePage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-    const [formData, setFormData] = useState({ from_name: '', from_email: '', message: '' });
+    const [formData, setFormData] = useState({ from_name: '', message: '' });
     const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -585,13 +615,16 @@ const CustomerServicePage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         setStatus('sending');
 
         const CONTACT_TEMPLATE_ID = 'template_2ewe2ax';
+        const templateParams = {
+            name: formData.from_name,
+            time: new Date().toLocaleString(),
+            message: formData.message,
+        };
 
-        // The formData object ({ from_name, from_email, message })
-        // directly matches the expected variables in a standard contact template.
-        window.emailjs.send(SERVICE_ID, CONTACT_TEMPLATE_ID, formData)
+        window.emailjs.send(SERVICE_ID, CONTACT_TEMPLATE_ID, templateParams)
             .then(() => {
                 setStatus('success');
-                setFormData({ from_name: '', from_email: '', message: '' });
+                setFormData({ from_name: '', message: '' });
                 setTimeout(() => {
                     onClose();
                 }, 2500);
@@ -621,19 +654,6 @@ const CustomerServicePage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                             placeholder="Jane Doe"
                             className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-500"
                             value={formData.from_name}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div>
-                        <label htmlFor="from_email" className="block text-sm font-medium text-gray-700">Your Email</label>
-                        <input
-                            type="email"
-                            name="from_email"
-                            id="from_email"
-                            required
-                            placeholder="you@example.com"
-                            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-500"
-                            value={formData.from_email}
                             onChange={handleChange}
                         />
                     </div>
@@ -679,40 +699,110 @@ const profanityFilter = (text: string): string => {
     return cleanText;
 }
 
+interface AdminPageProps {
+    participants: Participant[];
+    setParticipants: React.Dispatch<React.SetStateAction<Participant[]>>;
+}
+
+const AdminPage: React.FC<AdminPageProps> = ({ participants, setParticipants }) => {
+    
+    const handleSetStatus = (id: number, newStatus: string) => {
+        setParticipants(prev => prev.map(p => p.id === id ? { ...p, statuses: [newStatus] } : p));
+    };
+
+    const handleDelete = (id: number) => {
+        if (window.confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) {
+            setParticipants(prev => prev.filter(p => p.id !== id));
+        }
+    };
+
+    const userParticipants = participants.filter(p => p.id > 0);
+
+    return (
+        <main className="pt-24 pb-12 bg-gray-50 min-h-screen">
+            <div className="container mx-auto px-4">
+                <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Admin Panel</h1>
+                <div className="bg-white shadow-lg rounded-lg overflow-x-auto">
+                    <table className="w-full text-sm text-left text-gray-600">
+                        <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+                            <tr>
+                                <th scope="col" className="px-6 py-3">Name</th>
+                                <th scope="col" className="px-6 py-3">Email</th>
+                                <th scope="col" className="px-6 py-3">Password</th>
+                                <th scope="col" className="px-6 py-3">Signed Up</th>
+                                <th scope="col" className="px-6 py-3">Status</th>
+                                <th scope="col" className="px-6 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {userParticipants.map(p => (
+                                <tr key={p.id} className="bg-white border-b hover:bg-gray-50">
+                                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{p.name}</td>
+                                    <td className="px-6 py-4">{p.email}</td>
+                                    <td className="px-6 py-4 font-mono">{p.password}</td>
+                                    <td className="px-6 py-4">{p.signupDate ? new Date(p.signupDate).toLocaleDateString() : 'N/A'}</td>
+                                    <td className="px-6 py-4">
+                                        <StatusBadge status={p.statuses[0]} />
+                                    </td>
+                                    <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                                        {p.statuses.includes('pending_review') && (
+                                            <button onClick={() => handleSetStatus(p.id, 'Opted-in')} className="font-medium text-green-600 hover:underline">Approve</button>
+                                        )}
+                                        {p.statuses.includes('Opted-in') && (
+                                            <button onClick={() => handleSetStatus(p.id, 'hidden')} className="font-medium text-yellow-600 hover:underline">Hide</button>
+                                        )}
+                                        {p.statuses.includes('hidden') && (
+                                            <button onClick={() => handleSetStatus(p.id, 'Opted-in')} className="font-medium text-blue-600 hover:underline">Unhide</button>
+                                        )}
+                                        <button onClick={() => handleDelete(p.id)} className="font-medium text-red-600 hover:underline">Delete</button>
+                                    </td>
+                                </tr>
+                            ))}
+                             {userParticipants.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="text-center py-10 text-gray-500">No user accounts found.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    );
+};
 
 // --- MAIN APP COMPONENT ---
 export default function App() {
   const [modal, setModal] = useState<{ type: 'login' | 'info' | 'contact'; title: string; children: React.ReactNode } | null>(null);
-  const [page, setPage] = useState<'home' | 'signup'>('home');
+  // FIX: Add 'admin' to the page state's type to allow for an admin page view.
+  const [page, setPage] = useState<'home' | 'signup' | 'admin'>('home');
   const [participants, setParticipants] = useState<Participant[]>(() => {
     try {
         const savedUserParticipantsRaw = localStorage.getItem('vcmm-participants');
         if (savedUserParticipantsRaw) {
             const userAddedParticipants = JSON.parse(savedUserParticipantsRaw) as Participant[];
-            // Combine the hardcoded initial list with the user-added list from storage
-            return [...initialParticipants, ...userAddedParticipants];
+            const initialUsers = initialParticipants.filter(ip => !userAddedParticipants.some(up => up.id === ip.id));
+            return [...initialUsers, ...userAddedParticipants];
         }
     } catch (error) {
         console.error("Failed to load participants from localStorage", error);
     }
-    // If nothing is in storage, start with the initial list
     return initialParticipants;
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [currentUser, setCurrentUser] = useState<Participant | null>(null);
 
   // State for the two-step signup process
   const [signupStep, setSignupStep] = useState<'details' | 'verify'>('details');
-  const [signupData, setSignupData] = useState<{ name: string; email: string; } | null>(null);
+  const [signupData, setSignupData] = useState<{ name: string; email: string; password: string; } | null>(null);
   const [verificationCode, setVerificationCode] = useState<string | null>(null);
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
 
-  // Save only user-added participants to localStorage whenever they change
   useEffect(() => {
     try {
-        const userAddedParticipants = participants.filter(p => p.id > 0);
-        localStorage.setItem('vcmm-participants', JSON.stringify(userAddedParticipants));
+        localStorage.setItem('vcmm-participants', JSON.stringify(participants));
     } catch (error) {
         console.error("Failed to save participants to localStorage", error);
     }
@@ -754,9 +844,20 @@ export default function App() {
   }, []);
   
   const handleLogin = useCallback((email: string, password: string): boolean => {
-    // NOTE: We are not checking the password for this demo app.
-    // In a real application, you would send this to a backend for secure verification.
-    const user = participants.find(p => p.email?.toLowerCase() === email.toLowerCase());
+    const lowerEmail = email.toLowerCase();
+
+    // Admin Login
+    if (lowerEmail === 'data.relay.service@gmail.com' && password === 'tweettwoe0909!') {
+        setIsLoggedIn(true);
+        setIsAdmin(true);
+        setCurrentUser({ id: 0, name: 'Admin', avatarUrl: '', statuses: ['Administrator'], email: lowerEmail });
+        setPage('admin');
+        closeModal();
+        return true;
+    }
+    
+    // Regular User Login
+    const user = participants.find(p => p.email?.toLowerCase() === lowerEmail && p.password === password);
     
     if (user) {
         setIsLoggedIn(true);
@@ -771,7 +872,7 @@ export default function App() {
 
   const openLoginModal = useCallback(() => setModal({ type: 'login', title: 'Log In', children: <LoginForm onSubmit={handleLogin}/> }), [handleLogin]);
 
-  const handleSignUpInitiation = async (name: string, email: string) => {
+  const handleSignUpInitiation = async (name: string, email: string, password: string) => {
     if (!name.trim() || !email.trim()) return;
     setIsSigningUp(true);
     setVerificationError(null);
@@ -781,7 +882,7 @@ export default function App() {
     expiryDate.setMinutes(expiryDate.getMinutes() + 15);
     const expiryTime = expiryDate.toLocaleString();
     
-    setSignupData({ name, email });
+    setSignupData({ name, email, password });
     setVerificationCode(passcode);
 
     const templateParams = {
@@ -813,8 +914,10 @@ export default function App() {
                 id: newId,
                 name: signupData.name,
                 email: signupData.email.toLowerCase(),
+                password: signupData.password,
+                signupDate: new Date().toISOString(),
                 avatarUrl: `https://picsum.photos/seed/${signupData.name.replace(/\s/g, '')}/200`,
-                statuses: ['Opted-in'],
+                statuses: ['pending_review'],
             };
             
             setParticipants(prev => [...prev, newParticipant]);
@@ -835,7 +938,9 @@ export default function App() {
 
   const handleLogout = useCallback(() => {
     setIsLoggedIn(false);
+    setIsAdmin(false);
     setCurrentUser(null);
+    setPage('home');
   }, []);
 
   useEffect(() => {
@@ -889,6 +994,10 @@ export default function App() {
   const termsContent = <div className="text-gray-600 text-sm space-y-2"><p>By accessing this website, you agree to be bound by these Terms of Use. If you do not agree with any of these terms, you are prohibited from using or accessing this site.</p></div>;
 
   const renderPage = () => {
+    if (isAdmin) {
+        return <AdminPage participants={participants} setParticipants={setParticipants} />;
+    }
+    
     switch (page) {
       case 'signup':
         return <SignUpPage 
@@ -902,7 +1011,7 @@ export default function App() {
                 />;
       case 'home':
       default:
-        return <HomePage onSignUpClick={navigateToSignUp} participants={participants} />;
+        return <HomePage onSignUpClick={navigateToSignUp} participants={participants} isLoggedIn={isLoggedIn} currentUser={currentUser} />;
     }
   };
   
@@ -922,7 +1031,7 @@ export default function App() {
       </div>
 
       <Footer 
-        variant={page === 'signup' ? 'slim' : 'full'}
+        variant={page === 'signup' || isAdmin ? 'slim' : 'full'}
         onCopyrightClick={() => openInfoModal('Copyright Information', copyrightContent)}
         onPrivacyClick={() => openInfoModal('Privacy Policy', privacyContent)}
         onTermsClick={() => openInfoModal('Terms of Use', termsContent)}

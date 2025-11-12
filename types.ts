@@ -6,4 +6,6 @@ export interface Participant {
   message?: string;
   link?: string;
   email?: string;
+  password?: string;
+  signupDate?: string;
 }
